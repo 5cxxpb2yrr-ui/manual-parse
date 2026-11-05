@@ -6,6 +6,19 @@
 			name="viewport"
 			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
 		/>
+		<meta name="theme-color" content="#09090b" />
+		<link rel="manifest" href="./manifest.webmanifest" />
+		<link rel="apple-touch-icon" href="./icons/motornote-icon.svg" />
+		<script>
+			if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+				window.addEventListener('load', () => {
+					const worker = new URL('./sw.js', document.baseURI);
+					const scope = new URL('./', document.baseURI).pathname;
+					navigator.serviceWorker.register(worker.href, { scope })
+						.catch(err => console.warn('[MotorNote] Offline worker registration failed:', err));
+				});
+			}
+		</script>
 		<title>
 			MotorNote Pro Ultimate - Commercial Fleet & Personal Garage
 		</title>	
