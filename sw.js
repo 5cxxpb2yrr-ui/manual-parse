@@ -1,5 +1,5 @@
 /* MotorNote offline application shell and runtime dependency cache. */
-const VERSION = 'motornote-pwa-v1';
+const VERSION = 'motornote-pwa-v2';
 const SHELL_CACHE = VERSION + '-shell';
 const RUNTIME_CACHE = VERSION + '-runtime';
 const BASE = self.registration.scope;
@@ -22,30 +22,12 @@ const RUNTIME = [
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
+    // Install only same-origin app-shell files. Do not block startup on CDN downloads.
     const shell = await caches.open(SHELL_CACHE);
     await shell.addAll(SHELL);
-    const runtime = await caches.open(RUNTIME_CACHE);
-    await Promise.all(RUNTIME.map(async url => {
-      try {
-        let req = new Request(url, { mode: 'cors', cache: 'reload' });
-        let response;
-        try { response = await fetch(req); }
-        catch (_) {
-          req = new Request(url, { mode: 'no-cors', cache: 'reload' });
-          response = await fetch(req);
-        }
-        if (response && (response.ok || response.type === 'opaque')) {
-          await runtime.put(req, response.clone());
-        }
-      } catch (error) {
-        // A CDN outage must not prevent the local app shell from installing.
-        console.warn('[MotorNote SW] Runtime warm-up skipped:', url, error);
-      }
-    }));
     await self.skipWaiting();
   })());
 });
-
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
