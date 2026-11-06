@@ -3838,7 +3838,18 @@ class MotorElement extends HTMLElement {
 							await this.runDatabaseHealthCheck();
 							if (source === 'legacy-localstorage' && this.garageDB) localStorage.setItem('motornote_pro_migration_complete', new Date().toISOString());
 							this.loadKbIndex();
-							this.surrealInit();
+							// iOS Safari is prone to terminating tabs while large WASM
+							// modules are compiled. Core persistence already uses the
+							// primary IndexedDB store, so keep the optional mirror off
+							// on iPhone/iPad and leave the rest of the app operational.
+							const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+								(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+							if (isIOS) {
+								this.surrealStatus = 'unavailable';
+							this.surrealError = 'Optional SurrealDB WASM mirror disabled on iOS Safari; primary IndexedDB storage remains active.';
+							} else {
+								this.surrealInit();
+							}
 						} catch (error) {
 							console.error('Garage initialization failed', error?.name || 'Error', error?.message || error, error?.stack || '');
 							this.databaseHealth = { ...this.databaseHealth, status: 'error', issues: ['Application state could not be initialized safely.'], warnings: [error.message || 'Unknown initialization error'], lastCheckedAt: new Date().toISOString() };
